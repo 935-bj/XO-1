@@ -6,36 +6,47 @@ import 'package:xo/page/welcome_page.dart';
 import 'package:xo/page/create_page.dart';
 import 'package:xo/page/join_page.dart';
 import 'package:xo/page/lounge.dart';
-import 'package:xo/page/game_page.dart';
 import 'package:xo/page/scoreboard.dart';
-//import 'package:xo/resources/socket_methods.dart';
-//import 'package:xo/provider/tictactoe_board.dart';
-//import 'package:xo/resources/socket_methods.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  WidgetsFlutterBinding.ensureInitialized();
 
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-  // This widget is the root of your application.
+  const MyApp();
+  
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData.dark()
           .copyWith(scaffoldBackgroundColor: const Color.fromRGBO(0, 0, 0, 1)),
+      onGenerateRoute: (settings) {
+        /*if (settings.name == Scoreboard.routeName) {
+          final args = settings.arguments as Map<String, String>;
+          return MaterialPageRoute(
+            builder: (context) => Scoreboard(
+              //roomID: args['roomID']!,
+              //playerName: args['playerNameX']!,
+              //playerNameX: args['playerNameX']!,
+              //playerNameY: args['playerNameY']!,
+            ),
+          );
+        }
+        return null;*/
+      },
       routes: {
         WelcomePage.routeName: (context) => const WelcomePage(),
         CreateRoom.routeName: (context) => const CreateRoom(),
         JoinRoom.routeName: (context) => const JoinRoom(),
         Lounge.routeName: (context) => const Lounge(),
-        Scoreboard.routeName: (context) => const Scoreboard(),
+        Scoreboard.routeName:(context) => const Scoreboard(),
       },
       initialRoute: WelcomePage.routeName,
     );

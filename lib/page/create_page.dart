@@ -3,6 +3,18 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:xo/page/lounge.dart';
+import 'package:xo/page/scoreboard.dart';
+import 'package:xo/widgets/custom_textfield.dart';
+import 'package:xo/widgets/custome_text.dart';
+//import 'package:xo/provider/room_data_provider.dart';
+
+import 'package:xo/widgets/custom_buttom.dart';
+
+import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/src/widgets/framework.dart';
+import 'package:flutter/src/widgets/placeholder.dart';
+import 'package:xo/page/lounge.dart';
 import 'package:xo/widgets/custom_textfield.dart';
 import 'package:xo/widgets/custome_text.dart';
 //import 'package:xo/provider/room_data_provider.dart';
@@ -19,7 +31,6 @@ class CreateRoom extends StatefulWidget {
 
 class _CreateRoomState extends State<CreateRoom> {
   final nameController = TextEditingController();
-  //final socketMethod _socketMethod = socketMethod();
   late DatabaseReference dbRef;
 
   @override

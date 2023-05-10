@@ -1,299 +1,380 @@
+import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:xo/page/welcome_page.dart';
+import 'package:xo/page/join_page.dart';
 import 'package:xo/widgets/custom_textfield.dart';
 import 'package:xo/widgets/custome_text.dart';
 import 'package:xo/widgets/custom_buttom.dart';
+import 'package:flutter/scheduler.dart';
 
-class Scoreboard extends StatefulWidget {
-  static const String routeName = '/scoreboard'; // define the routeName property
+/*class Scoreboard extends StatelessWidget {
+  static const String routeName = '/scoreboard';
+
   const Scoreboard({Key? key}) : super(key: key);
 
   @override
-  State<Scoreboard> createState() => _ScoreboardState();
+  Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>;
+
+    final String roomID = args['roomID'];
+    final String playerNameX = args['playerNameX'];
+    final String playerNameY = args['playerNameY'];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Scoreboard'),
+      ),
+      body: Column(
+        children: [
+          Text('Room ID: $roomID'),
+          Text('Player X: $playerNameX'),
+          Text('Player O: $playerNameY'),
+          SizedBox(height: 20), // Add some space between the text and the board
+          TicTacToeBoard(), // Add the tic tac toe board
+        ],
+      ),
+    );
+  }
 }
 
-class _ScoreboardState extends State<Scoreboard> {
-  late DatabaseReference _scoresRef;
+class TicTacToeBoard extends StatefulWidget {
+  const TicTacToeBoard({Key? key}) : super(key: key);
 
-bool oTurn = true;
+  @override
+  _TicTacToeBoardState createState() => _TicTacToeBoardState();
+}
 
-// 1st player is O
-List<String> displayElement = ['', '', '', '', '', '', '', '', ''];
-int xScore = 0;
-int oScore = 0;
-int filledBoxes = 0;
+class _TicTacToeBoardState extends State<TicTacToeBoard> {
+  List<String> board = List.filled(9, '');
+  bool isFirstPlayerX = true;
+  String? winner;
+  int scoreX = 0;
+  int scoreO = 0;
 
-@override
-void initState() {
-  super.initState();
-  _scoresRef = FirebaseDatabase.instance.ref('scores');
-  _scoresRef.onValue.listen((event) {
-    var snapshotValue = event.snapshot.value;
-    if (snapshotValue != null) {
-      var values = Map<String, dynamic>.from(snapshotValue as Map<dynamic, dynamic>);
-      setState(() {
-        xScore = values['x'] ?? 0;
-        oScore = values['o'] ?? 0;
-      });
-    }
+  void _clearBoard() {
+  setState(() {
+    board = List.filled(9, '');
+    isFirstPlayerX = true;
+    winner = null;
   });
 }
 
-  void _incrementScore(String player) {
-    if (player == 'x') {
-      _scoresRef.update({'x': xScore + 1});
-    } else if (player == 'o') {
-      _scoresRef.update({'o': oScore + 1});
+  void _showWinDialog(String winner) {
+  showDialog(
+    barrierDismissible: false,
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text(winner == 'X' ? 'Player X is winner!' : 'Player O is winner!'),
+        actions: [
+          TextButton(
+            child: Text("Play Again"),
+            onPressed: () {
+              _clearBoard();
+              Navigator.of(context).pop();
+            },
+          ),
+          TextButton(
+            child: Text("Finish the game"),
+            onPressed: () {
+              _clearBoard();
+              Navigator.pushNamed(context, WelcomePage.routeName);
+            },
+          )
+        ],
+      );
+    },
+  );
+}
+
+void checkWinner() {
+  // Check rows
+  for (int i = 0; i < 9; i += 3) {
+    if (board[i].isNotEmpty && board[i] == board[i + 1] && board[i] == board[i + 2]) {
+      setState(() {
+        winner = board[i];
+      });
+      if (winner != null) {
+        _showWinDialog(winner!);
+      }
+      return;
     }
   }
 
-@override
+  // Check columns
+  for (int i = 0; i < 3; i++) {
+    if (board[i].isNotEmpty && board[i] == board[i + 3] && board[i] == board[i + 6]) {
+      setState(() {
+        winner = board[i];
+      });
+      if (winner != null) {
+        _showWinDialog(winner!);
+      }
+      return;
+    }
+  }
+}
+
+  @override
 Widget build(BuildContext context) {
-	return Scaffold(
-    appBar: AppBar(
-        title: Container(
-          child: Image.asset(
-            'image/logo.png',
-            scale: 4,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: const Color.fromRGBO(0, 0, 0, 1),
+  return Column(
+    children: [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Text('Player X: $scoreX'),
+          Text('Player O: $scoreO'),
+        ],
       ),
-
-	backgroundColor: Colors.black,
-	body: Column(
-		children: <Widget>[
-		Expanded(
-			child: Container(
-			child: Row(
-				mainAxisAlignment: MainAxisAlignment.center,
-				children: <Widget>[
-				Padding(
-					padding: const EdgeInsets.all(30.0),
-					child: Column(
-					mainAxisAlignment: MainAxisAlignment.center,
-					children: <Widget>[
-            CustomText(
-              text: 'Player 1',
-              fontSize: 20,
+      GridView.builder(
+        itemCount: board.length,
+        shrinkWrap: true,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+        ),
+        itemBuilder: (BuildContext context, int index) {
+          return GestureDetector(
+            onTap: () {
+              if (board[index].isEmpty && winner == null) {
+                setState(() {
+                  board[index] = isFirstPlayerX ? 'X' : 'O';
+                  isFirstPlayerX = !isFirstPlayerX;
+                  checkWinner();
+                });
+              }
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Colors.purpleAccent, width: 2.0,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  board[index],
+                  style: TextStyle(
+                    fontSize: 50,
+                  ),
+                ),
+              ),
             ),
-						CustomText(
-              text: xScore.toString(),
-              fontSize: 20,
+          );
+        },
+      ),
+      SizedBox(height: 20),
+      ElevatedButton(
+        onPressed: _clearBoard,
+        child: Text('Clear board'),
+      ),
+    ],
+  );
+}
+}*/
+
+class Scoreboard extends StatelessWidget {
+  static const String routeName = '/scoreboard';
+
+  const Scoreboard({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>;
+
+    final String roomID = args['roomID'];
+    final String playerNameX = args['playerNameX'];
+    final String playerNameY = args['playerNameY'];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Scoreboard'),
+      ),
+      body: Column(
+        children: [
+          Text('Room ID: $roomID'),
+          Text('Player X: $playerNameX'),
+          Text('Player O: $playerNameY'),
+          SizedBox(height: 20), // Add some space between the text and the board
+          TicTacToeBoard(), // Add the tic tac toe board
+        ],
+      ),
+    );
+  }
+}
+
+class TicTacToeBoard extends StatefulWidget {
+  const TicTacToeBoard({Key? key}) : super(key: key);
+
+  @override
+  _TicTacToeBoardState createState() => _TicTacToeBoardState();
+}
+
+class _TicTacToeBoardState extends State<TicTacToeBoard> {
+  List<String> board = List.filled(9, '');
+  bool isFirstPlayerX = true;
+  String? winner;
+  int scoreX = 0;
+  int scoreO = 0;
+
+  void _clearBoard() {
+  setState(() {
+    board = List.filled(9, '');
+    isFirstPlayerX = true;
+    winner = null;
+  });
+}
+
+  void _showWinDialog(String winner) {
+  showDialog(
+    barrierDismissible: false,
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text(winner == 'X' ? 'Player X is winner!' : 'Player O is winner!'),
+        actions: [
+          TextButton(
+            child: Text("Play Again"),
+            onPressed: () {
+              _clearBoard();
+              Navigator.of(context).pop();
+            },
+          ),
+          TextButton(
+            child: Text("Finish the game"),
+            onPressed: () {
+              _clearBoard();
+              Navigator.pushNamed(context, WelcomePage.routeName);
+            },
+          )
+        ],
+      );
+    },
+  );
+}
+
+void checkWinner() {
+    // Check rows
+    for (int i = 0; i < 9; i += 3) {
+      if (board[i].isNotEmpty && board[i] == board[i + 1] && board[i] == board[i + 2]) {
+        setState(() {
+          winner = board[i];
+          if (winner == 'X') {
+            scoreX++;
+          } else {
+            scoreO++;
+          }
+        });
+        _showWinDialog(winner!);
+        return;
+      }
+  }
+
+  // Check columns
+    for (int i = 0; i < 3; i++) {
+      if (board[i].isNotEmpty && board[i] == board[i + 3] && board[i] == board[i + 6]) {
+        setState(() {
+          winner = board[i];
+          if (winner == 'X') {
+            scoreX++;
+          } else {
+            scoreO++;
+          }
+        });
+        _showWinDialog(winner!);
+        return;
+      }
+    }
+
+    // Check diagonals
+    if (board[0].isNotEmpty && board[0] == board[4] && board[0] == board[8]) {
+      setState(() {
+        winner = board[0];
+        if (winner == 'X') {
+          scoreX++;
+        } else {
+          scoreO++;
+        }
+      });
+      _showWinDialog(winner!);
+      return;
+    }
+
+    if (board[2].isNotEmpty && board[2] == board[4] && board[2] == board[6]) {
+      setState(() {
+        winner = board[2];
+        if (winner == 'X') {
+          scoreX++;
+        } else {
+          scoreO++;
+        }
+      });
+      _showWinDialog(winner!);
+      return;
+    }
+
+    // Check for tie
+    if (!board.contains('')) {
+      setState(() {
+        winner = 'Tie';
+      });
+      _showWinDialog(winner!);
+      return;
+    }
+  }
+
+
+  @override
+Widget build(BuildContext context) {
+  return Column(
+    children: [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Text('Player X: $scoreX'),
+          Text('Player O: $scoreO'),
+        ],
+      ),
+      GridView.builder(
+        itemCount: board.length,
+        shrinkWrap: true,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+        ),
+        itemBuilder: (BuildContext context, int index) {
+          return GestureDetector(
+            onTap: () {
+              if (board[index].isEmpty && winner == null) {
+                setState(() {
+                  board[index] = isFirstPlayerX ? 'X' : 'O';
+                  isFirstPlayerX = !isFirstPlayerX;
+                  checkWinner();
+                });
+              }
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Colors.purpleAccent, width: 2.0,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  board[index],
+                  style: TextStyle(
+                    fontSize: 50,
+                  ),
+                ),
+              ),
             ),
-					],
-					),
-				),
-				Padding(
-					padding: const EdgeInsets.all(30.0),
-					child: Column(
-					mainAxisAlignment: MainAxisAlignment.center,
-					children: <Widget>[
-						CustomText(
-              text: 'Player 2',
-              fontSize: 20,
-            ),
-            CustomText(
-              text: oScore.toString(),
-              fontSize: 20,
-            ),
-					],
-					),
-				),
-				],
-			),
-			),
-		),
-		Expanded(
-			flex: 4,
-			child: GridView.builder(
-				itemCount: 9,
-				gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-					crossAxisCount: 3),
-				itemBuilder: (BuildContext context, int index) {
-				return GestureDetector(
-					onTap: () {
-					_tapped(index);
-					},
-					child: Container(
-					decoration: BoxDecoration(
-						border: Border.all(color: Colors.white)),
-					child: Center(
-						child: Text(
-						displayElement[index],
-						style: TextStyle(color: Colors.white, fontSize: 85),
-						),
-					),
-					),
-				);
-				}),
-		),
-		Expanded(
-			child: Container(
-			child: Row(
-			mainAxisAlignment: MainAxisAlignment.center,
-			children: <Widget>[
-				ElevatedButton(
-  style: ElevatedButton.styleFrom(
-    primary: Colors.black,
-  ),
-  onPressed: _clearScoreBoard,
-  child: Text("Clear Score Board"),
-),
-			],
-			),
-		))
-		],
-	),
-	);
-}
-
-void _tapped(int index) {
-	setState(() {
-	if (oTurn && displayElement[index] == '') {
-		displayElement[index] = 'o';
-		filledBoxes++;
-	} else if (!oTurn && displayElement[index] == '') {
-		displayElement[index] = 'x';
-		filledBoxes++;
-	}
-
-	oTurn = !oTurn;
-	_checkWinner();
-	});
-}
-
-void _checkWinner() {
-	
-	// Checking rows
-	if (displayElement[0] == displayElement[1] &&
-		displayElement[0] == displayElement[2] &&
-		displayElement[0] != '') {
-	_showWinDialog(displayElement[0]);
-	}
-	if (displayElement[3] == displayElement[4] &&
-		displayElement[3] == displayElement[5] &&
-		displayElement[3] != '') {
-	_showWinDialog(displayElement[3]);
-	}
-	if (displayElement[6] == displayElement[7] &&
-		displayElement[6] == displayElement[8] &&
-		displayElement[6] != '') {
-	_showWinDialog(displayElement[6]);
-	}
-
-	// Checking Column
-	if (displayElement[0] == displayElement[3] &&
-		displayElement[0] == displayElement[6] &&
-		displayElement[0] != '') {
-	_showWinDialog(displayElement[0]);
-	}
-	if (displayElement[1] == displayElement[4] &&
-		displayElement[1] == displayElement[7] &&
-		displayElement[1] != '') {
-	_showWinDialog(displayElement[1]);
-	}
-	if (displayElement[2] == displayElement[5] &&
-		displayElement[2] == displayElement[8] &&
-		displayElement[2] != '') {
-	_showWinDialog(displayElement[2]);
-	}
-
-	// Checking Diagonal
-	if (displayElement[0] == displayElement[4] &&
-		displayElement[0] == displayElement[8] &&
-		displayElement[0] != '') {
-	_showWinDialog(displayElement[0]);
-	}
-	if (displayElement[2] == displayElement[4] &&
-		displayElement[2] == displayElement[6] &&
-		displayElement[2] != '') {
-	_showWinDialog(displayElement[2]);
-	} else if (filledBoxes == 9) {
-	_showDrawDialog();
-	}
-}
-
-void _showWinDialog(String winner) {
-	showDialog(
-		barrierDismissible: false,
-		context: context,
-		builder: (BuildContext context) {
-		return AlertDialog(
-			title: Text("\" " + winner + " \" is Winner!"),
-			actions: [
-			TextButton(
-				child: Text("Play Again"),
-				onPressed: () {
-				_clearBoard();
-				Navigator.of(context).pop();
-				},
-			),
-      TextButton(
-				child: Text("Finish the game"),
-				onPressed: () {
-				_clearBoard();
-				Navigator.pushNamed(context, WelcomePage.routeName);
-				},
-			)
-			],
-		);
-		});
-
-	if (winner == 'o') {
-	oScore++;
-	} else if (winner == 'x') {
-	xScore++;
-	}
-}
-
-void _showDrawDialog() {
-	showDialog(
-		barrierDismissible: false,
-		context: context,
-		builder: (BuildContext context) {
-		return AlertDialog(
-			title: Text("Draw"),
-			actions: [
-			TextButton(
-				child: Text("Play Again"),
-				onPressed: () {
-				_clearBoard();
-				Navigator.of(context).pop();
-				},
-			),
-      TextButton(
-				child: Text("Finish the game"),
-				onPressed: () {
-				_clearBoard();
-				Navigator.pushNamed(context, WelcomePage.routeName);
-				},
-			)
-			],
-		);
-		});
-}
-
-void _clearBoard() {
-	setState(() {
-	for (int i = 0; i < 9; i++) {
-		displayElement[i] = '';
-	}
-	});
-
-	filledBoxes = 0;
-}
-
-void _clearScoreBoard() {
-	setState(() {
-	xScore = 0;
-	oScore = 0;
-	for (int i = 0; i < 9; i++) {
-		displayElement[i] = '';
-	}
-	});
-	filledBoxes = 0;
+          );
+        },
+      ),
+      SizedBox(height: 20),
+      ElevatedButton(
+        onPressed: _clearBoard,
+        child: Text('Clear board'),
+      ),
+    ],
+  );
 }
 }

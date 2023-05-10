@@ -1,7 +1,6 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:flutter/material.dart';
-import 'package:xo/page/game_page.dart';
 import 'package:xo/widgets/custom_buttom.dart';
 import 'package:xo/widgets/custome_text.dart';
 import 'package:xo/widgets/custom_textfield.dart';
