@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:xo/page/create_page.dart';
+import 'package:xo/page/displayScore.dart';
 import 'package:xo/page/join_page.dart';
 import 'package:xo/widgets/custom_buttom.dart';
 
@@ -19,9 +20,7 @@ class WelcomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-      
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -37,6 +36,14 @@ class WelcomePage extends StatelessWidget {
             onTap: () => join(context),
             text: 'Join Room',
           ),
+          const SizedBox(
+            height: 20,
+          ),
+          CustomButton(
+              onTap: () {
+                Navigator.pushNamed(context, displayScore.routeName);
+              },
+              text: 'Scoreboard')
         ],
       ),
     );

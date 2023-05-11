@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:xo/page/welcome_page.dart';
+import 'package:xo/page/displayScore.dart';
 import 'package:xo/page/join_page.dart';
 import 'package:xo/widgets/custom_textfield.dart';
 import 'package:xo/widgets/custome_text.dart';
@@ -232,9 +233,6 @@ class _TicTacToeBoardState extends State<TicTacToeBoard> {
   int scoreX = 0;
   int scoreO = 0;
 
-  //get playerNameX => null;
-  //get playerNameO => null;
-
   void _clearBoard() {
     setState(() {
       board = List.filled(9, '');
@@ -280,12 +278,14 @@ class _TicTacToeBoardState extends State<TicTacToeBoard> {
                 String playerX = widget.playerNameX;
                 String playerO = widget.playerNameY;
                 dbRef.push().set({
-                  '$playerX': scoreX,
-                  '$playerO': scoreO,
+                  'playerX': playerX,
+                  'playerO': playerO,
+                  'scoreX': scoreX,
+                  'scoreO': scoreO,
                 });
                 _clearBoard();
                 //navigate to score
-                Navigator.pushNamed(context, WelcomePage.routeName);
+                Navigator.pushNamed(context, displayScore.routeName);
               },
             )
           ],
