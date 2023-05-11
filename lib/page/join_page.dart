@@ -25,49 +25,58 @@ class _JoinRoomState extends State<JoinRoom> {
   }
 
   Future<void> _joinRoom(BuildContext context) async {
-  final String playerNameX = _nameController.text.trim();
-  String playerNameY = ''; // Initialize playerNameY to an empty string
-  final String roomID = "room"; // Replace with your standard room ID
-  if (playerNameX.isNotEmpty) {
-    final DatabaseEvent event = await dbRef.child('games').child(roomID).once();
-    final Map<dynamic, dynamic>? value = event.snapshot.value as Map<dynamic, dynamic>?;
-    final int counter = value?['counter'] ?? 0;
-    if (counter % 2 == 0) {
-      // Add user X to the room
-      await dbRef.child('games').child(roomID).update({'user1': playerNameX, 'counter': counter + 1});
+    final String playerNameX = _nameController.text.trim();
+    String playerNameY = ''; // Initialize playerNameY to an empty string
+    final String roomID = "room"; // Replace with your standard room ID
+    if (playerNameX.isNotEmpty) {
+      final DatabaseEvent event =
+          await dbRef.child('games').child(roomID).once();
+      final Map<dynamic, dynamic>? value =
+          event.snapshot.value as Map<dynamic, dynamic>?;
+      final int counter = value?['counter'] ?? 0;
+      if (counter % 2 == 0) {
+        // Add user X to the room
+        await dbRef
+            .child('games')
+            .child(roomID)
+            .update({'user1': playerNameX, 'counter': counter + 1});
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Waiting for another player to join...'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      } else {
+        // Add user Y to the room
+        await dbRef
+            .child('games')
+            .child(roomID)
+            .update({'user2': playerNameX, 'counter': counter + 1});
+        playerNameY = value!['user1'] ??
+            ''; // Set playerNameY to the name of the first player, or to an empty string if not available
+
+        // Navigate to game screen
+        Navigator.pushNamed(
+          context,
+          Scoreboard.routeName,
+          arguments: {
+            'roomID': roomID,
+            'playerNameX': value!['user1'] ?? '',
+            'playerNameY': playerNameX,
+          },
+        );
+      }
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Waiting for another player to join...'),
+          content: Text('Player Name cannot be blank'),
           duration: Duration(seconds: 2),
         ),
       );
-    } else {
-      // Add user Y to the room
-      await dbRef.child('games').child(roomID).update({'user2': playerNameX, 'counter': counter + 1});
-      playerNameY = value!['user1'] ?? ''; // Set playerNameY to the name of the first player, or to an empty string if not available
-
-      // Navigate to game screen
-      Navigator.pushNamed(
-        context,
-        Scoreboard.routeName,
-        arguments: {
-          'roomID': roomID,
-          'playerNameX': value!['user1'] ?? '',
-          'playerNameY': playerNameX,
-        },
-      );
     }
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Player Name cannot be blank'),
-        duration: Duration(seconds: 2),
-      ),
-    );
   }
-}
 
- @override
+  @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
@@ -107,8 +116,9 @@ class _JoinRoomState extends State<JoinRoom> {
                       duration: Duration(seconds: 2),
                     ),
                   );
-                  } else {
+                } else {
                   _joinRoom(context);
+                  _nameController.clear();
                 }
               },
               text: 'Join Game',

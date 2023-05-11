@@ -1,12 +1,12 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:xo/firebase_options.dart';
+import 'package:xo/page/displayScore.dart';
 import 'package:xo/page/scoreboard.dart';
 import 'package:xo/page/welcome_page.dart';
 import 'package:xo/page/create_page.dart';
 import 'package:xo/page/join_page.dart';
 import 'package:xo/page/lounge.dart';
-import 'package:xo/page/scoreboard.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,7 +19,7 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp();
-  
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -46,7 +46,8 @@ class MyApp extends StatelessWidget {
         CreateRoom.routeName: (context) => const CreateRoom(),
         JoinRoom.routeName: (context) => const JoinRoom(),
         Lounge.routeName: (context) => const Lounge(),
-        Scoreboard.routeName:(context) => const Scoreboard(),
+        Scoreboard.routeName: (context) => const Scoreboard(),
+        displayScore.routeName: (context) => const displayScore(),
       },
       initialRoute: WelcomePage.routeName,
     );
